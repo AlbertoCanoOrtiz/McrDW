@@ -1,0 +1,716 @@
+Private strfiletoopen As String
+Private iflag As Integer
+Private wbsource As Workbook
+Private thbook As Workbook
+Private sQuery As String
+Private cConnect As ADODB.Connection
+Private rRecordSet As ADODB.Recordset
+Private strCodProducto As String
+Private lCodEmpresa As Long
+Private lCodPymeColectivo As Long
+Private dStartDate As Date
+Private dEndDate As Date
+Private lCheckPoint As Long
+'Especial para el analisis de marketing
+Public Property Let validate(num As Integer)
+Dim count As Long
+count = Application.WorksheetFunction.CountA(ThisWorkbook.Sheets("General").Range("AD:AD"))
+If ThisWorkbook.Sheets("General").Range("AE" & (count + 1)).Value = 0 And IsNumeric(ThisWorkbook.Sheets("General").Range("AE" & (count + 1)).Value) Then
+iflag = num
+lCodEmpresa = ThisWorkbook.Sheets("General").Range("AE" & (count + 1)).Value
+lCodPymeColectivo = ThisWorkbook.Sheets("General").Range("AF" & (count + 1)).Value
+Else
+iflag = 0
+End If
+End Property
+Public Property Let SetStartDate(StartDate As Date)
+dStartDate = StartDate
+End Property
+Public Property Get StartDate() As Date
+StartDate = dStartDate
+End Property
+Public Property Let SetEndDate(enddate As Date)
+dEndDate = enddate
+End Property
+Public Property Get enddate() As Date
+enddate = dEndDate
+End Property
+Public Property Let SetCodEmpresa(CodEmpresa As Long)
+lCodEmpresa = CodEmpresa
+End Property
+Public Property Get CodEmpresa() As Long
+CodEmpresa = lCodEmpresa
+End Property
+Public Property Let setCodProducto(CodProducto As String)
+strCodProducto = CodProducto
+End Property
+Public Property Let setFlag(ind As Integer)
+iflag = ind
+End Property
+Public Property Let setFileToOpen(flag As Integer)
+strfiletoopen = Application.GetOpenFilename("Todos los archivos (*.*),*.*")
+End Property
+Public Property Let setWorkbook(flag As Integer)
+If flag = 1 Then
+On Error GoTo HANDLER
+Set wbsource = Workbooks.Open(FileToOpen)
+Set thbook = ThisWorkbook
+End If
+Continue:
+Exit Property
+HANDLER:
+MsgBox "Es posible que el archivo ya no este disponible" & vbNewLine & "O se haya cancelado la busqueda", vbInformation
+iflag = 0
+Resume Continue:
+End Property
+Public Property Let generalcopy(flag As Integer)
+
+If flag = 1 Then
+Dim functions As Object
+Dim length As Long
+
+thbook.Activate
+Set functions = Application.WorksheetFunction
+length = functions.CountA(Range("A:A")) + 1
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b11").copy 'Rfc
+thbook.Activate
+Sheets("General").Range("A" & length).PasteSpecial xlPasteValues
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b10").copy 'RazonSocial
+thbook.Activate
+Sheets("General").Range("b" & length).PasteSpecial xlPasteValues
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b14").copy 'Producto
+thbook.Activate
+Sheets("General").Range("c" & length).PasteSpecial xlPasteValues
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b27").copy 'TipoDeAdministracion
+thbook.Activate
+Sheets("General").Range("d" & length).PasteSpecial xlPasteValues
+'Range("d" & length).NumberFormat = 0
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("f15").copy 'TipoDePlan
+thbook.Activate
+Sheets("General").Range("e" & length).PasteSpecial xlPasteValues
+'Range("d" & length).NumberFormat = 0
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("f14").copy 'Geografia
+thbook.Activate
+Sheets("General").Range("f" & length).PasteSpecial xlPasteValues
+'Range("f" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("b36").copy 'Canal
+'thbook.Activate
+'Sheets("Channels").Range("g" & length).PasteSpecial xlPasteValues
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b15").copy 'FormaDePago
+thbook.Activate
+Sheets("General").Range("h" & length).PasteSpecial xlPasteValues
+'Range("h" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b33").copy 'Calle y Numero
+thbook.Activate
+Sheets("General").Range("i" & length).PasteSpecial xlPasteValues
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("e33").copy 'Colonia
+thbook.Activate
+Sheets("General").Range("j" & length).PasteSpecial xlPasteValues
+'Range("j" & length).NumberFormat = "dd/mm/yyyy"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b35").copy 'Delegacion
+thbook.Activate
+Sheets("General").Range("k" & length).PasteSpecial xlPasteValues
+'Range("k" & length).NumberFormat = "dd/mm/yyyy"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b37").copy 'Ejecutivo de ventas
+thbook.Activate
+Sheets("General").Range("l" & length).PasteSpecial xlPasteValues
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b39").copy 'Ejecutivo de cuentas
+thbook.Activate
+Sheets("General").Range("m" & length).PasteSpecial xlPasteValues
+'Range("m" & length).NumberFormat = "0.00%"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b41").copy 'Contacto de canal
+thbook.Activate
+Sheets("General").Range("n" & length).PasteSpecial xlPasteValues
+'Range("m" & length).NumberFormat = "0.00%"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("d41").copy 'Correo
+thbook.Activate
+Sheets("General").Range("O" & length).PasteSpecial xlPasteValues
+'Range("d" & length).NumberFormat = 0
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("d18").copy 'FechaInicio
+thbook.Activate
+Sheets("General").Range("P" & length).PasteSpecial xlPasteValues
+Range("O" & length).NumberFormat = "dd/mm/yyyy"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("f18").copy 'FechaTermino
+thbook.Activate
+Sheets("General").Range("q" & length).PasteSpecial xlPasteValues
+Range("p" & length).NumberFormat = "dd/mm/yyyy"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b13").copy 'TotalAfiliados
+thbook.Activate
+Sheets("General").Range("r" & length).PasteSpecial xlPasteValues
+Range("r" & length).NumberFormat = 0
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b16").copy 'Comision
+thbook.Activate
+Sheets("General").Range("s" & length).PasteSpecial xlPasteValues
+Range("s" & length).NumberFormat = "0.00%"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("d14").copy 'Costo Unitario
+thbook.Activate
+Sheets("General").Range("t" & length).PasteSpecial xlPasteValues
+Range("t" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b22").copy 'Costo programa
+thbook.Activate
+Sheets("General").Range("u" & length).PasteSpecial xlPasteValues
+Range("u" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b23").copy 'Derechos poliza
+thbook.Activate
+Sheets("General").Range("v" & length).PasteSpecial xlPasteValues
+Range("v" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b24").copy 'pago frac
+thbook.Activate
+Sheets("General").Range("w" & length).PasteSpecial xlPasteValues
+Range("w" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b25").copy 'iva
+thbook.Activate
+Sheets("General").Range("x" & length).PasteSpecial xlPasteValues
+Range("x" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b26").copy 'total
+thbook.Activate
+Sheets("General").Range("y" & length).PasteSpecial xlPasteValues
+Range("y" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b26").copy 'total
+thbook.Activate
+Sheets("General").Range("y" & length).PasteSpecial xlPasteValues
+Range("y" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("e26").copy 'total
+thbook.Activate
+Sheets("General").Range("z" & length).PasteSpecial xlPasteValues
+Range("z" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("f26").copy 'total
+thbook.Activate
+Sheets("General").Range("AA" & length).PasteSpecial xlPasteValues
+Range("AA" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("e28").copy 'total
+thbook.Activate
+Sheets("General").Range("AB" & length).PasteSpecial xlPasteValues
+Range("AB" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("f28").copy 'total
+thbook.Activate
+Sheets("General").Range("AC" & length).PasteSpecial xlPasteValues
+Range("AC" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+wbsource.Activate
+Sheets("EmisiónColectiva2016").Range("b18").copy 'Facturacion
+thbook.Activate
+Sheets("General").Range("AD" & length).PasteSpecial xlPasteValues
+'Range("AC" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+
+End If
+End Property
+Public Property Let SearchChannel(flag As Integer)
+If flag = 1 Then
+Dim strChannel As String
+Dim lCountRange As Long
+Dim lcount As Long
+thbook.Sheets("Channels").Activate
+lCountRange = Application.WorksheetFunction.CountA(Range("A:A"))
+wbsource.Sheets("EmisiónColectiva2016").Activate
+strChannel = Sheets("EmisiónColectiva2016").Range("F16").Value
+
+On Error GoTo HANDLER
+thbook.Sheets("Channels").Activate
+strResult = Application.WorksheetFunction.VLookup(strChannel, Range("A2:B" & lCountRange), 2, 0)
+thbook.Sheets("General").Activate
+lCountRange = Application.WorksheetFunction.CountA(Range("A:A"))
+Sheets("General").Range("G" & (lCountRange)).Value = strResult
+End If
+Continue:
+
+Exit Property
+
+HANDLER:
+thbook.Sheets("General").Activate
+lcount = Application.WorksheetFunction.CountA(Range("A:A"))
+thbook.Sheets("General").Range("G" & lcount).Value = "CS-" & lCountRange
+thbook.Sheets("Channels").Activate
+Range("A" & (lCountRange + 1)).Value = strChannel
+Range("B" & (lCountRange + 1)).Value = "CS-" & lCountRange
+Resume Continue:
+
+End Property
+'Especial para el almacen de fichas tecnicas
+Public Property Let CreateFolder(flag As Integer)
+Dim name As String
+If flag = 1 Then
+    name = ThisWorkbook.Path & "\Fichas"
+    If Dir(name, vbDirectory + vbHidden + vbNormal) = "" Then
+        MkDir (ThisWorkbook.Path & "\Fichas")
+    End If
+End If
+End Property
+'Especial para el almace de fichas tecnicas
+Public Property Let SaveFile(flag As Integer)
+
+If flag = 1 Then
+    Dim name As String
+    Dim product As String
+    name = wbsource.Sheets("EmisiónColectiva2016").Range("b9").Value
+    product = wbsource.Sheets("EmisiónColectiva2016").Range("b14").Value
+    wbsource.SaveAs ThisWorkbook.Path & "\Fichas\" & name & product & Year(Date) & Month(Date) & Day(Date) & Hour(Time) & Minute(Time) & Second(Time) & ".xlsm"
+    wbsource.Close
+End If
+
+
+Set wbsource = Nothing
+
+End Property
+Public Property Let SetUpdateQuery(NameQuery As String, flag As Integer)
+If flag = 1 Then
+Dim myFile As String
+Dim text As String
+Dim textline As String
+myFile = ThisWorkbook.Path & "\Querys\" & NameQuery & ".txt"
+Open myFile For Input As #1
+Do Until EOF(1)
+    Line Input #1, textline
+    If textline <> "//" Then
+        text = text & textline
+    ElseIf textline = "//" And lCodPymeColectivo <> 0 Then
+        text = text & "and a.codempresa in ('" & lCodEmpresa & "') "
+        text = text & "and a.codpymecolectivo in ('" & lCodPymeColectivo & "') "
+    Else
+        text = text & "and a.codempresa in ('" & lCodEmpresa & "') "
+    End If
+Loop
+Close #1
+sQuery = text
+End If
+End Property
+Public Property Let SetDisasterQuery(NameQuery As String, flag As Integer)
+Dim myFile As String
+Dim text As String
+Dim textline As String
+If flag = 1 Then
+myFile = ThisWorkbook.Path & "\Querys\" & NameQuery & ".txt"
+Open myFile For Input As #1
+Do Until EOF(1)
+    Line Input #1, textline
+    If textline <> "//" Then
+        text = text & textline
+    ElseIf textline = "//" Then
+        text = text & "and  o.f_ocurrido between '" & Format(dStartDate, "yyyy/mm/dd") & "' and '" & Format(dEndDate, "yyyy/mm/dd") & "' "
+        text = text & "and d.codempresa in ('" & lCodEmpresa & "') "
+        text = text & "and d.codProducto in ('" & strCodProducto & "') "
+    End If
+Loop
+Close #1
+End If
+sQuery = text
+End Property
+Public Property Let SetPopulationQuery(NameQuery As String, flag As String)
+Dim myFile As String
+Dim text As String
+Dim textline As String
+If flag = 1 Then
+myFile = ThisWorkbook.Path & "\Querys\" & NameQuery & ".txt"
+Open myFile For Input As #1
+Do Until EOF(1)
+    Line Input #1, textline
+    If textline <> "//" Then
+        text = text & textline
+    ElseIf textline = "//" And lCodPymeColectivo <> 0 Then
+        text = text & "and a.codempresa in ('" & lCodEmpresa & "') "
+        text = text & "and a.codpymecolectivo in ('" & lCodPymeColectivo & "') "
+        text = text & "and pr.Codproducto in ('" & strCodProducto & "') "
+        text = text & "and (a.FechaInicioServicio between '" & Format(dStartDate, "yyyy/mm/dd") & "' and '" & Format(dEndDate, "yyyy/mm/dd") & "' or a.FechaFinServicio between '" & Format(dStartDate, "yyyy/mm/dd") & "' and '" & Format(dEndDate, "yyyy/mm/dd") & "') "
+    Else
+        text = text & "and a.codempresa in ('" & lCodEmpresa & "') "
+        text = text & "and pr.Codproducto in ('" & strCodProducto & "') "
+        text = text & "and (a.FechaInicioServicio between '" & Format(dStartDate, "yyyy/mm/dd") & "' and '" & Format(dEndDate, "yyyy/mm/dd") & "' or a.FechaFinServicio between '" & Format(dStartDate, "yyyy/mm/dd") & "' and '" & Format(dEndDate, "yyyy/mm/dd") & "') "
+    End If
+
+Loop
+Close #1
+
+sQuery = text
+End If
+End Property
+Public Property Let SetConnetion(NameOfSettings As String, flag As Integer)
+Dim Settings As String
+If flag = 1 Then
+On Error GoTo HANDLER
+Settings = ReadTxt(NameOfSettings)
+Set cConnect = New ADODB.Connection
+cConnect.Open Settings
+End If
+Continue:
+Exit Property
+HANDLER:
+setFlag = 0
+MsgBox "Error de conexion a la DB Esposible que el servidor no este disponible" & vbNewLine & "Elimine el registro reinicie el proceso", vbInformation
+Resume Continue:
+End Property
+Public Property Let SetRecordSet(Query As String, flag As Integer)
+If flag = 1 Then
+Set rRecordSet = New ADODB.Recordset
+Set rRecordSet = cConnect.Execute(Query)
+End If
+End Property
+Public Property Let RecordToSheet(NameOfSheet As String, flag As Integer)
+If flag = 1 Then
+    ThisWorkbook.Sheets(NameOfSheet).Activate
+    lCheckPoint = Application.WorksheetFunction.CountA(Range("A:A"))
+    ThisWorkbook.Sheets(NameOfSheet).Range("A" & (lCheckPoint + 1)).CopyFromRecordset rRecordSet
+End If
+End Property
+Public Property Get FileToOpen()
+FileToOpen = strfiletoopen
+End Property
+Public Property Get flag()
+flag = iflag
+End Property
+Public Property Get Query()
+Query = sQuery
+End Property
+Public Property Get CodProducto()
+CodProducto = strCodProducto
+End Property
+Public Property Let SetPremium(flag As Integer)
+
+Dim count As Long
+Dim i As Long
+
+thbook.Sheets("Joined").Activate
+count = Application.WorksheetFunction.CountA(Range("A:A"))
+    If flag = 1 And (wbsource.Sheets("EmisiónColectiva2016").Range("b14").Value = "DOMO" Or wbsource.Sheets("EmisiónColectiva2016").Range("b14").Value = "Protege 100" Or wbsource.Sheets("EmisiónColectiva2016").Range("b14").Value = "Protege 200" Or wbsource.Sheets("EmisiónColectiva2016").Range("b14").Value = "Protege 300" Or wbsource.Sheets("EmisiónColectiva2016").Range("b14").Value = "Protege 500") Then
+        For i = (lCheckPoint + 1) To count
+            Debug.Print flag + flag
+            If thbook.Sheets("Joined").Range("C" & i).Value = 0 Then
+                thbook.Sheets("Joined").Range("V" & i).Value = (1.16) * (120 + wbsource.Sheets("EmisiónColectiva2016").Range("D14").Value + wbsource.Sheets("EmisiónColectiva2016").Range("D14").Value * wbsource.Sheets("EmisiónColectiva2016").Range("D15").Value) * (CountMonth / 12)
+            Else
+                thbook.Sheets("Joined").Range("V" & i).Value = (1.16) * (wbsource.Sheets("EmisiónColectiva2016").Range("D14").Value + wbsource.Sheets("EmisiónColectiva2016").Range("D14").Value * wbsource.Sheets("EmisiónColectiva2016").Range("D15").Value) * (CountMonth / 12)
+            End If
+        Next i
+    ElseIf flag = 1 And (wbsource.Sheets("EmisiónColectiva2016").Range("b14").Value = "Membresía TDU Familiar" Or wbsource.Sheets("EmisiónColectiva2016").Range("b14").Value = "Platinum Familiar" Or wbsource.Sheets("EmisiónColectiva2016").Range("b14").Value = "Membresía Familiar") Then
+        For i = (lCheckPoint + 1) To count
+            If thbook.Sheets("Joined").Range("C" & i).Value = 0 Then
+                thbook.Sheets("Joined").Range("V" & i).Value = (1.16) * (wbsource.Sheets("EmisiónColectiva2016").Range("D14").Value + wbsource.Sheets("EmisiónColectiva2016").Range("D14").Value * wbsource.Sheets("EmisiónColectiva2016").Range("D15").Value) * (CountMonth / 12)
+            Else
+                thbook.Sheets("Joined").Range("V" & i).Value = 0
+            End If
+        Next i
+    ElseIf flag = 1 Then
+        For i = (lCheckPoint + 1) To count
+            thbook.Sheets("Joined").Range("V" & i).Value = (1.16) * (wbsource.Sheets("EmisiónColectiva2016").Range("D14").Value + wbsource.Sheets("EmisiónColectiva2016").Range("D14").Value * wbsource.Sheets("EmisiónColectiva2016").Range("D15").Value) * (CountMonth / 12)
+        Next i
+    End If
+End Property
+Public Property Let SetSuresPremium(strNameSheet As String, flag As Integer)
+Dim count As Long
+Dim i As Long
+
+'Funciona bajo el supuesto de que los pagos son efectivos por periodo no considera el recargo por pago frac
+'hay que implementar una vercion de la misma
+
+
+ThisWorkbook.Sheets(strNameSheet).Activate
+count = Application.WorksheetFunction.CountA(Range("A:A"))
+    
+For i = (lCheckPoint + 1) To count
+    
+    If Year(Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd")) = 2015 And flag = 1 And (Range("s" & i).Value Like "DS*" Or Range("s" & i).Value Like "GMMPTG100*" Or Range("s" & i).Value Like "GMMPTG200*" Or Range("s" & i).Value Like "GMMPTG300*" Or Range("s" & i).Value Like "GMMPTG500*") Then
+            
+            ThisWorkbook.Sheets(strNameSheet).Range("T" & i).Value = 0 * (CountMonth(strNameSheet, Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd"), Format(ThisWorkbook.Sheets(strNameSheet).Range("L" & i).Value, "yyyy/mm/dd")) / 12)
+    
+    
+    'Inicios antes de la vigencia
+    ElseIf Year(Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd")) = 2015 And Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd") < dStartDate And flag = 1 And Range("s" & i).Value Like "MPAC*" Then
+            
+            ThisWorkbook.Sheets(strNameSheet).Range("T" & i).Value = 417 * (0.9) * (CountMonth(strNameSheet, dStartDate, Format(ThisWorkbook.Sheets(strNameSheet).Range("L" & i).Value, "yyyy/mm/dd")) / 12)   'El costo incluye un 10 de adqui. que hay que descontar por ello el .9
+                        
+    ElseIf Year(Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd")) = 2015 And flag = 1 And Range("s" & i).Value Like "MPAC*" Then
+            
+            ThisWorkbook.Sheets(strNameSheet).Range("T" & i).Value = 417 * (0.9) * (CountMonth(strNameSheet, Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd"), Format(ThisWorkbook.Sheets(strNameSheet).Range("L" & i).Value, "yyyy/mm/dd")) / 12)   'El costo incluye un 10 de adqui. que hay que descontar por ello el .9
+    
+    'Inicios antes de la vigencia
+    ElseIf Year(Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd")) = 2015 And Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd") < dStartDate And flag = 1 And ThisWorkbook.Sheets(strNameSheet).Range("s" & i).Value Like "MSAI*" Then
+
+            ThisWorkbook.Sheets(strNameSheet).Range("T" & i).Value = 1134 * (0.9) * (CountMonth(strNameSheet, dStartDate, Format(ThisWorkbook.Sheets(strNameSheet).Range("L" & i).Value, "yyyy/mm/dd")) / 12)   'El costo incluye un 10 de adqui. que hay que descontar por ello el .9
+            
+    ElseIf Year(Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd")) = 2015 And flag = 1 And ThisWorkbook.Sheets(strNameSheet).Range("s" & i).Value Like "MSAI*" Then
+
+            ThisWorkbook.Sheets(strNameSheet).Range("T" & i).Value = 1134 * (0.9) * (CountMonth(strNameSheet, Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd"), Format(ThisWorkbook.Sheets(strNameSheet).Range("L" & i).Value, "yyyy/mm/dd")) / 12)   'El costo incluye un 10 de adqui. que hay que descontar por ello el .9
+            
+    
+    
+    ElseIf Year(Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd")) = 2016 And flag = 1 And (Range("s" & i).Value Like "DS*" Or Range("s" & i).Value Like "GMMPTG100*" Or Range("s" & i).Value Like "GMMPTG200*" Or Range("s" & i).Value Like "GMMPTG300*" Or Range("s" & i).Value Like "GMMPTG500*") Then
+            
+            ThisWorkbook.Sheets(strNameSheet).Range("T" & i).Value = 0 * (CountMonth(strNameSheet, Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd"), Format(ThisWorkbook.Sheets(strNameSheet).Range("L" & i).Value, "yyyy/mm/dd")) / 12)
+            
+            
+            
+    'Inicios antes de la vigencia
+    ElseIf Year(Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd")) = 2016 And Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd") < dStartDate And flag = 1 And Range("s" & i).Value Like "MPAC*" Then
+            
+            ThisWorkbook.Sheets(strNameSheet).Range("T" & i).Value = 519 * (CountMonth(strNameSheet, dStartDate, Format(ThisWorkbook.Sheets(strNameSheet).Range("L" & i).Value, "yyyy/mm/dd")) / 12)
+    
+    ElseIf Year(Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd")) = 2016 And flag = 1 And Range("s" & i).Value Like "MPAC*" Then
+            
+            ThisWorkbook.Sheets(strNameSheet).Range("T" & i).Value = 519 * (CountMonth(strNameSheet, Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd"), Format(ThisWorkbook.Sheets(strNameSheet).Range("L" & i).Value, "yyyy/mm/dd")) / 12)
+            
+    'Inicios antes de la vigencia
+    ElseIf Year(Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd")) = 2016 And Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd") < dStartDate And flag = 1 And Range("s" & i).Value Like "MSAI*" Then
+        
+            ThisWorkbook.Sheets(strNameSheet).Range("T" & i).Value = 1764 * (CountMonth(strNameSheet, dStartDate, Format(ThisWorkbook.Sheets(strNameSheet).Range("L" & i).Value, "yyyy/mm/dd")) / 12)
+            
+    ElseIf Year(Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd")) = 2016 And flag = 1 And Range("s" & i).Value Like "MSAI*" Then
+        
+            ThisWorkbook.Sheets(strNameSheet).Range("T" & i).Value = 1764 * (CountMonth(strNameSheet, Format(ThisWorkbook.Sheets(strNameSheet).Range("k" & i).Value, "yyyy/mm/dd"), Format(ThisWorkbook.Sheets(strNameSheet).Range("L" & i).Value, "yyyy/mm/dd")) / 12)
+            
+    
+    ElseIf flag = 1 Then
+        
+    End If
+    
+Next i
+
+End Property
+Private Function ReadTxt(NameQuery As String) As String
+Dim myFile As String
+Dim text As String
+Dim textline As String
+myFile = ThisWorkbook.Path & "\Querys\" & NameQuery & ".txt"
+Open myFile For Input As #1
+Do Until EOF(1)
+    Line Input #1, textline
+    text = text & textline
+Loop
+Close #1
+ReadTxt = text
+End Function
+Function CountMonth(strName As String, dIni As Date, dEnd As Date)
+
+ThisWorkbook.Worksheets(strName).Activate
+
+If CDate(dEnd) = CDate(dIni) Then
+    CountMonth = 0
+ElseIf Year(CDate(dEnd)) = Year(CDate(dIni)) And Month(CDate(dEnd)) = Month(CDate(dIni)) Then
+    CountMonth = 1
+ElseIf Year(CDate(dEnd)) = Year(CDate(dIni)) Then
+    CountMonth = Month(CDate(dEnd)) - Month(CDate(dIni))
+Else
+    CountMonth = 12 * (Year(CDate(dEnd)) - Year(CDate(dIni))) + (Month(CDate(dEnd)) - Month(CDate(dIni)) + 1)
+End If
+
+End Function
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'Public Property Let specialcopy(flag As Integer)
+'
+'If flag = 1 Then
+'Dim functions As Object
+'Dim length As Long
+'Dim count As Long
+'Dim i As Long
+'Set functions = Application.WorksheetFunction
+'
+'wbsource.Activate
+'count = functions.CountA(Range("B:B"))
+'
+'For i = 2 To count
+'
+'thbook.Activate
+'
+'
+'length = functions.CountA(Range("A:A")) + 1
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("b" & i).copy 'Rfc
+'thbook.Activate
+'Sheets("General").Range("b" & length).PasteSpecial xlPasteValues
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("c" & i).copy 'RazonSocial
+'thbook.Activate
+'Sheets("General").Range("a" & length).PasteSpecial xlPasteValues
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("e" & i).copy 'Producto
+'thbook.Activate
+'Sheets("General").Range("i" & length).PasteSpecial xlPasteValues
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("f" & i).copy 'TipoDeAdministracion
+'thbook.Activate
+'Sheets("General").Range("j" & length).PasteSpecial xlPasteValues
+'Range("d" & length).NumberFormat = 0
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("g" & i).copy 'TipoDePlan
+'thbook.Activate
+'Sheets("General").Range("k" & length).PasteSpecial xlPasteValues
+'Range("d" & length).NumberFormat = 0
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("h" & i).copy  'Geografia
+'thbook.Activate
+'Sheets("General").Range("g" & length).PasteSpecial xlPasteValues
+'Range("f" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("b36").copy 'Canal
+'thbook.Activate
+'Sheets("Channels").Range("g" & length).PasteSpecial xlPasteValues
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("i" & i).copy 'FormaDePago
+'thbook.Activate
+'Sheets("General").Range("s" & length).PasteSpecial xlPasteValues
+'Range("s" & length).NumberFormat = "0.00%"
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("k" & i).copy 'Calle y Numero
+'thbook.Activate
+'Sheets("General").Range("p" & length).PasteSpecial xlPasteValues
+'Range("p" & length).NumberFormat = "dd/mm/yyyy"
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("l" & i).copy 'Colonia
+'thbook.Activate
+'Sheets("General").Range("q" & length).PasteSpecial xlPasteValues
+'Range("q" & length).NumberFormat = "dd/mm/yyyy"
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("m" & i).copy 'Delegacion
+'thbook.Activate
+'Sheets("General").Range("c" & length).PasteSpecial xlPasteValues
+'Range("k" & length).NumberFormat = "dd/mm/yyyy"
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("n" & i).copy 'Ejecutivo de ventas
+'thbook.Activate
+'Sheets("General").Range("h" & length).PasteSpecial xlPasteValues
+'
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("o" & i).copy 'Ejecutivo de cuentas
+'thbook.Activate
+'Sheets("General").Range("r" & length).PasteSpecial xlPasteValues
+'Range("m" & length).NumberFormat = "0.00%"
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("p" & i).copy 'Contacto de canal
+'thbook.Activate
+'Sheets("General").Range("t" & length).PasteSpecial xlPasteValues
+'Range("t" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("q" & i).copy 'Correo
+'thbook.Activate
+'Sheets("General").Range("u" & length).PasteSpecial xlPasteValues
+'Range("u" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("r" & i).copy 'FechaInicio
+'thbook.Activate
+'Sheets("General").Range("x" & length).PasteSpecial xlPasteValues
+'Range("x" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("s" & i).copy 'FechaTermino
+'thbook.Activate
+'Sheets("General").Range("w" & length).PasteSpecial xlPasteValues
+'Range("w" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("t" & i).copy 'TotalAfiliados
+'thbook.Activate
+'Sheets("General").Range("y" & length).PasteSpecial xlPasteValues
+'Range("y" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+'
+'wbsource.Activate
+'Sheets("EmisiónColectiva2016").Range("u" & i).copy 'Comision
+'thbook.Activate
+'Sheets("General").Range("v" & length).PasteSpecial xlPasteValues
+'Range("v" & length).NumberFormat = "$#,##0.00;[Red]$#,##0.00"
+'
+'
+'Next i
+'
+'End If
+'End Property
+'

@@ -1,0 +1,19 @@
+'Especial para copiar de otro almacen de fichas la info
+Sub MainAlt()
+
+Application.ScreenUpdating = False
+ActiveSheet.DisplayPageBreaks = False
+Application.CutCopyMode = False
+
+Dim oitem As Item
+
+Set oitem = New Item
+
+oitem.validate = 1
+oitem.setFlag = oitem.flag()
+oitem.setFileToOpen = oitem.flag()
+oitem.setWorkbook = oitem.flag()
+oitem.specialcopy = oitem.flag()
+
+
+End Sub

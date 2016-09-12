@@ -1,0 +1,24 @@
+'Especial para guardar solo el registro de la ficha
+Sub main()
+
+Application.ScreenUpdating = False
+ActiveSheet.DisplayPageBreaks = False
+Application.CutCopyMode = False
+
+Dim oitem As Item
+
+Set oitem = New Item
+
+oitem.validate = 1
+oitem.setFlag = oitem.flag()
+oitem.setFileToOpen = oitem.flag()
+oitem.setWorkbook = oitem.flag()
+oitem.generalcopy = oitem.flag()
+oitem.SearchChannel = oitem.flag()
+oitem.CreateFolder = oitem.flag()
+oitem.SaveFile = oitem.flag()
+
+End Sub
+
+
+

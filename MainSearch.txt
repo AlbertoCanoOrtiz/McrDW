@@ -1,0 +1,52 @@
+Sub mainSearch()
+
+Application.ScreenUpdating = False
+ActiveSheet.DisplayPageBreaks = False
+Application.CutCopyMode = False
+
+Dim i As Long
+Dim lcount As Long
+Dim oitem As Item
+Dim pitem As Item
+
+Set oitem = New Item
+Set pitem = New Item
+pitem.setFlag = 1
+oitem.setFlag = 1
+oitem.SetConnetion("127Settings") = oitem.flag()
+pitem.SetConnetion("CloudSettings") = pitem.flag()
+
+lcount = Application.WorksheetFunction.CountA(ThisWorkbook.Sheets("Search").Range("D:D"))
+
+
+For i = 2 To lcount
+
+oitem.setCodProducto = ThisWorkbook.Sheets("Search").Range("C" & i).Value
+oitem.SetCodEmpresa = ThisWorkbook.Sheets("Search").Range("AF" & i).Value
+oitem.SetStartDate = ThisWorkbook.Sheets("Search").Range("Q" & i).Value
+oitem.SetEndDate = ThisWorkbook.Sheets("Search").Range("R" & i).Value
+
+pitem.setCodProducto = ThisWorkbook.Sheets("Search").Range("C" & i).Value
+pitem.SetCodEmpresa = ThisWorkbook.Sheets("Search").Range("AF" & i).Value
+pitem.SetStartDate = ThisWorkbook.Sheets("Search").Range("Q" & i).Value
+pitem.SetEndDate = ThisWorkbook.Sheets("Search").Range("R" & i).Value
+
+oitem.SetDisasterQuery("SpeMktClTDisaster") = oitem.flag()
+oitem.SetRecordSet(oitem.Query()) = oitem.flag()
+oitem.RecordToSheet("Db") = oitem.flag()
+
+pitem.SetPopulationQuery("1.0Population") = pitem.flag()
+pitem.SetRecordSet(pitem.Query()) = pitem.flag()
+pitem.RecordToSheet("Joined") = pitem.flag()
+pitem.SetSuresPremium("Joined") = pitem.flag()
+
+
+
+Next i
+
+End Sub
+
+
+
+
+
